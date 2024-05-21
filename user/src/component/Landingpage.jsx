@@ -1,55 +1,183 @@
-import React from "react";
-import { Typography , Button } from "@mui/material";
-import { useEffect} from "react";
-
-
+import  { useEffect, useState } from "react";
+import PropTypes from "prop-types"; // Import PropTypes
+import { Button, Card, CardMedia, CardContent, Typography } from "@mui/material";
 
 function LandingPage() {
-    const [useremail , setuseremail] = React.useState(null);
+    const [useremail, setUserEmail] = useState(null);
+    const [recommendations, setRecommendations] = useState([]);
 
+    useEffect(() => {
+        fetch('http://localhost:3000/user/me', {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.username) {
+                setUserEmail(data.username);
+            }
+        });
+    }, []);
 
-  useEffect(() => {
-    fetch('http://localhost:3000/user/me' , {method : "GET" , headers: {
-      "Content-Type": "application/json" ,
-      "authorization": "Bearer " + localStorage.getItem("token")}
-    }).then(res => res.json()).then((data) => 
-        {
-          if(data.username){
-          setuseremail(data.username);
-        }})
-  } , [])
-                     
-  if(useremail){
+    useEffect(() => {
+        fetch('http://localhost:3000/user/recommendations', {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            setRecommendations(data.recommendations);
+        })
+        .catch(error => {
+            console.error('Error fetching recommendations:', error);
+        });
+    }, []);
+
+    const handlePurchase = (id) => {
+        fetch(`http://localhost:3000/product/` + id, {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            }
+        })
+        .then((res) => {
+            if (res.ok) {
+                alert('Product purchased successfully');
+            } else {
+                console.error('Failed to purchase product:', res.statusText);
+                alert('Failed to purchase product. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error purchasing product:', error);
+            alert('An error occurred while purchasing the product. Please try again later.');
+        });
+    };
+
+    const handleView = (id) => {
+        fetch(`http://localhost:3000/productHistory/` + id, {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("token")
+            }
+        })
+        .then((res) => {
+            if (res.ok) {
+                alert('Product viewed successfully');
+            } else {
+                console.error('Failed to view product:', res.statusText);
+                alert('Failed to view product. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error viewing product:', error);
+            alert('An error occurred while viewing the product. Please try again later.');
+        });
+    };
+
     return (
-        <div  style={{display: "flex" , justifyContent:"space-between"  }}>
-        <div style={{letterSpacing: 0.2, marginTop: 100,paddingLeft:150}}>
-        <Typography variant="h1"  >Learn without<br />limits</Typography>
-        <Typography variant="subtitle1">Start, switch, or advance your career with more than 5,800 courses, 
-        <br />Professional Certificates, and degrees from world-class universities
-        <br /> and companies.</Typography>
-        <br />
-        <Button onClick={() => {window.location.href="/courses"}}  size="large" variant="contained">start Learning</Button>
+        <div>
+            {useremail ? (
+                <div>
+                    <h1>Recommended Products</h1>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, 350px)", gap: "20px", justifyContent: "center", marginTop: 80 }}>
+                        {recommendations.map(recommendation => (
+                            <Recommendation
+                                key={recommendation._id}
+                                recommendation={recommendation}
+                                onPurchase={handlePurchase}
+                                onView={handleView}
+                            />
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div style={{ letterSpacing: 0.2, marginTop: 100, paddingLeft: 150 }}>
+                        <Button
+                            style={{ marginRight: 10 }}
+                            onClick={() => { window.location.href = 'Register' }}
+                            size="large"
+                            variant="contained"
+                        >
+                            Login
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
-        <img  style={{marginTop: 15 , paddingRight:10}} src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://images.ctfassets.net/wp1lcwdav1p1/5CFC8u8XiXcbSOlVv6JZQx/4e6f898f57f9d798437b3aa22026e30b/CourseraLearners_C_Composition_Hillary_copy__3_.png?auto=format%2Ccompress&dpr=1&w=459&h=497&q=40" alt="" />
-        </div>
-    )
-  }else{
-    
-    
+    );
+}
 
+function Recommendation(props) {
+    const { recommendation, onPurchase, onView } = props;
 
-    return <div  style={{display: "flex" , justifyContent:"space-between"  }}>
-        <div style={{letterSpacing: 0.2, marginTop: 100,paddingLeft:150}}>
-        <Typography variant="h1"  >Learn without<br />limits</Typography>
-        <Typography variant="subtitle1">Start, switch, or advance your career with more than 5,800 courses, 
-        <br />Professional Certificates, and degrees from world-class universities
-        <br /> and companies.</Typography>
-        <br /> 
-        <Button style = {{marginRight : 10}} onClick={() => {window.location.href = 'Register'}} size="large" variant="contained">Start Learning</Button>
+    return (
+        <div style={{ display: "grid" }}>
+            <Card sx={{ maxWidth: 345 }}>
+                <CardMedia
+                    component="img"
+                    image={recommendation.images}
+                    alt={recommendation.name}
+                    sx={{ height: 180 }}
+                />
+                <CardContent>
+                    <Typography gutterBottom variant="h5" component="div">
+                    {recommendation.brand} {recommendation.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {recommendation.description}
+                    </Typography>
+                    <div style={{ marginLeft: 15, justifyContent: "space-between", display: "flex" }}>
+                        <div>
+                            <Typography variant="subtitle2" style={{ color: "gray" }}>
+                                Price
+                            </Typography>
+                            <Typography variant="subtitle1">
+                                ₹ {recommendation.price}
+                            </Typography>
+                        </div>
+                        <div>
+                            <Button
+                                style={{ marginRight: 20, marginTop: 10 }}
+                                variant="contained"
+                                onClick={() => onPurchase(recommendation._id)}
+                            >
+                                Buy
+                            </Button>
+                            <Button
+                                style={{ marginRight: 20, marginTop: 10 }}
+                                variant="contained"
+                                onClick={() => onView(recommendation._id)}
+                            >
+                                View
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
-        <img  style={{marginTop: 15 , paddingRight:10}} src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://images.ctfassets.net/wp1lcwdav1p1/5CFC8u8XiXcbSOlVv6JZQx/4e6f898f57f9d798437b3aa22026e30b/CourseraLearners_C_Composition_Hillary_copy__3_.png?auto=format%2Ccompress&dpr=1&w=459&h=497&q=40" alt="" />
-        </div>
-  } 
-  }
+    );
+}
+
+// Adding PropTypes validation
+Recommendation.propTypes = {
+    recommendation: PropTypes.shape({
+        _id: PropTypes.string.isRequired,
+        images: PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
+        description: PropTypes.string.isRequired,
+        price: PropTypes.number.isRequired,
+        brand: PropTypes.string.isRequired
+
+    }).isRequired,
+    onPurchase: PropTypes.func.isRequired,
+    onView: PropTypes.func.isRequired
+};
 
 export default LandingPage;

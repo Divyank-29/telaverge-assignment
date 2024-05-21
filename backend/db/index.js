@@ -5,7 +5,8 @@ const userSchema = new mongoose.Schema({
     
     username : String,
     password: String,
-    purchasedCourses: [{type : mongoose.Schema.Types.ObjectId , ref: 'course'}]
+    purchasedProduct: [{type : mongoose.Schema.Types.ObjectId , ref: 'product'}],
+    viewHistory: [{type : mongoose.Schema.Types.ObjectId , ref: 'product'}]
   })
   
   const adminSchema = new mongoose.Schema({
@@ -13,20 +14,44 @@ const userSchema = new mongoose.Schema({
     password : String
   })
   
-  const courseSchema = new mongoose.Schema({
-    title : String,
-    description : String,
-    price : Number,
-    imageLink : String,
-    published: Boolean
+  const productSchema = new mongoose.Schema({
+    name: { 
+      type: String,
+       required: true
+       },
+       description: { 
+       type: String,
+       required: true 
+      },
+      price: { 
+      type: Number,
+       required: true
+       },
+      color: {
+        type:String,
+      },
+      category: { 
+      type: String,
+      required: true
+       },
+      images: {
+          type : String,
+       },
+      brand: {
+          type: String,
+      }
   })
+
+  productSchema.index({ name: 'text', description: 'text' , brand:"text"  });
   
  const User = mongoose.model('user', userSchema);
  const Admin = mongoose.model('admin' , adminSchema);
- const Course = mongoose.model('course' , courseSchema); 
-
+ const Product = mongoose.model('product' , productSchema); 
+ 
+ Product.createIndexes();
+ 
  module.exports = {
   User,
   Admin,
-  Course
+  Product
 }

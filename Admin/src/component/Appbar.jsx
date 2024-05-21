@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+
 
 
 
@@ -56,13 +56,13 @@ function Appbar() {
               textDecoration: 'none',
             }}
           >
-            Coursera
+            AcmeStore
           </Typography>
           </div>
           <div>
             <Button  color="inherit" onClick={() => {
-               window.location.href = '/courses'
-               }}>Courses</Button>
+               window.location.href = '/product'
+               }}>Product</Button>
       <Button color="inherit" onClick={() => { 
       localStorage.setItem("token", null); 
       navigate('/login')
@@ -103,7 +103,7 @@ function Appbar() {
               textDecoration: 'none',
             }}
           >
-            Coursera
+            AcmeStore
           </Typography>
           </div>
           <div > 

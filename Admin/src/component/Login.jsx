@@ -15,28 +15,42 @@ function Login () {
 
    
   
-      const handleLogin = () => {
-          fetch(`http://localhost:3000/admin/login` , 
-          {method : "POST",  headers: {
-              "Content-Type": "application/json" , 
-              username : email 
-              ,password : password
-            } , 
-              }
-            ).then(response => response.json()).then(data => {
-                localStorage.setItem("token" , data.token)
-                navigate("/")
-                setUser({
-                  userEmail: email , 
-                  isLoading : false
-                })
-                console.log(data)                   
-            })
-          }
+    const handleLogin = () => {
+      fetch(`http://localhost:3000/admin/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: email,
+          password: password
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to log in');
+        }
+        return response.json();
+      })
+      .then(data => {
+        localStorage.setItem("token", data.token);
+        navigate("/");
+        setUser({
+          userEmail: email,
+          isLoading: false
+        });
+        console.log(data);
+      })
+      .catch(error => {
+        console.error('Error:', error.message);
+        // Handle error (e.g., show error message to the user)
+      });
+    }
+    
     return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100vh", justifyContent: "center" }}>
           <Typography variant="subtitle1" style={{ fontWeight: "bold", marginBottom: "2rem" }}>
-            Log in to your courseHub account
+            Log in to your AcmeStore account
           </Typography>
           
           <Card variant="outlined" style={{ borderRadius: "8px", width: 400, padding: 50 }}>

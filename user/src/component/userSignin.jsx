@@ -24,9 +24,7 @@ function Signin() {
 
     return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100vh", justifyContent: "center" }}>
-          <Typography variant="subtitle1" style={{ fontWeight: "bold", marginBottom: "2rem" }}>
-            Signup and start learning
-          </Typography>
+          
           <Card variant="outlined" style={{ borderRadius: "8px", width: 400, padding: 50 }}>
             <TextField fullWidth={true} label="Username" variant="outlined" style={{ marginBottom: "1rem" }} 
             onChange={(e) => {setusername(e.target.value)}} />

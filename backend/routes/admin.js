@@ -1,7 +1,7 @@
 const express = require('express');
 const { jwttoken, SECRET } = require("../middleware/auth");
-const { User, Course, Admin } = require("../db");
-
+const { Product, Admin } = require("../db");
+const jwt = require('jsonwebtoken')
 
 const router = express.Router();
 
@@ -34,7 +34,7 @@ router.get('/admin/me' , jwttoken ,  (req , res) => {
   });
   
   router.post('/admin/login', async (req, res) => {
-    const {username , password} = req.headers
+    const {username , password} = req.body
     const userExist = await Admin.findOne({username , password});
     if(userExist){
       const obj = {username , password}
@@ -45,54 +45,25 @@ router.get('/admin/me' , jwttoken ,  (req , res) => {
     }
   });
   
-  router.post('/admin/courses', jwttoken ,async (req, res) => {
-    const course = req.body
-    const newCourse = new Course(course)
-    await newCourse.save();
-    res.status(200).json({ message: 'Course created successfully'})
+  router.post('/admin/product', jwttoken ,async (req, res) => {
+    const product = req.body
+    const newProduct = new Product(product)
+    await newProduct.save();
+    res.status(200).json({ message: 'product created successfully'})
   });
-  
-  router.put('/admin/courses/:courseId', jwttoken , async (req, res) => {
-    const courseId = req.params.courseId
-    const updatecourse = req.body
-    const course = await Course.findByIdAndUpdate(courseId, updatecourse , {new : true});
-    if (course) {
-      res.json({ message: 'Course updated successfully' });
-    } else {
-      res.status(404).json({ message: 'Course not found' });
-    }
-  });
-  
-  router.get('/admin/courses', jwttoken ,async (req, res) => {
-    const course = await Course.find({})
-    if(course){
-    res.status(200).send(course)
-  }
-  });
-  
-  
-  router.get('/course/:courseId' ,jwttoken , async (req,res ) => {
-    const courseId = req.params.courseId
-    const course = await Course.findById(courseId)
-    if(course){
-      res.status(200).send(course)
-    }
-  })
 
-  router.delete('/course/:courseId', jwttoken, async (req, res) => {
-    const courseId = req.params.courseId;
+  router.get('/admin/product', jwttoken, async (req, res) => {
     try {
-      const course = await Course.findByIdAndDelete(courseId);
-      if (course) {
-        res.status(200).send({message: "Deleted successfully"});
-      } else {
-        res.status(404).send("Course not found");
-      }
+        // If the JWT authentication is successful, the execution will reach here
+        const products = await Product.find({});
+        res.status(200).json(products);
     } catch (error) {
-      res.status(500).send("Internal Server Error");
+        // Handle any errors that might occur during fetching products
+        console.error('Error fetching products:', error);
+        res.status(500).send('Internal Server Error');
     }
-  });
-
+});
+  
   
   
    module.exports = router

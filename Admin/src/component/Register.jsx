@@ -17,9 +17,11 @@ function Register() {
 
     const handleSignup = () => {
         fetch(`http://localhost:3000/admin/signup` , 
-        {method : "POST",  headers: {
+        {method : "POST", 
+         headers: {
             "Content-Type": "application/json",} , 
-            body : JSON.stringify({ username : email , password :password})}
+            body : JSON.stringify({ username : email ,
+              password :password})}
           ).then((response) => response.json()).then((data) => {
           localStorage.setItem("token" , data.token)
           navigate("/")
@@ -35,7 +37,7 @@ function Register() {
     return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: "100vh", justifyContent: "center" }}>
           <Typography variant="subtitle1" style={{ fontWeight: "bold", marginBottom: "2rem" }}>
-            Signup and start learning
+           SignUp in account
           </Typography>
           <Card variant="outlined" style={{ borderRadius: "8px", width: 400, padding: 50 }}>
             <TextField fullWidth={true} label="Username" variant="outlined" style={{ marginBottom: "1rem" }} 

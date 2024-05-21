@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 const express = require('express');
-const { User, Course, Admin } = require("../db");
+const { User,  Admin, Product } = require("../db");
 const jwt = require('jsonwebtoken');
 const { SECRET } = require("../middleware/auth")
 const {jwttoken } = require("../middleware/auth");
+const getUserRecommendations = require('../recommendation/recommendation')
 
 const router = express.Router();
 
@@ -36,61 +37,161 @@ router.post('/user/signup',async  (req, res) => {
       let jwtto = jwt.sign(obj , SECRET )
       res.status(200).send({message : "Logged in successfully" , token: jwtto})
     }else{
+      
       res.status(400).send("can not login")
     }
   });
   
-  router.get('/user/courses', jwttoken ,async (req, res) => {
-    const courses = await Course.find({published: true});
-    res.json({courses});
+  router.get('/user/product', jwttoken ,async (req, res) => {
+    try {
+      // If the JWT authentication is successful, the execution will reach here
+      const products = await Product.find({});
+      res.status(200).json(products);
+  } catch (error) {
+      // Handle any errors that might occur during fetching products
+      console.error('Error fetching products:', error);
+      res.status(500).send('Internal Server Error');
+  }
   });
   
-  router.post('/courses/:courseId', jwttoken, async (req, res) => {
+  router.post('/product/:productId', jwttoken, async (req, res) => {
     
-    const course = await Course.findOne({_id: req.params.courseId});
-    if (course) {
+    const product= await Product.findOne({_id: req.params.productId});
+    if (product) {
       
       const user = await User.findOne({ username: req.user.username });
       if (user) {
-        user.purchasedCourses.push(course);
+        user.purchasedProduct.push(product);
         await user.save();
 
-        res.json({ message: 'Course purchased successfully' });
+        res.json({ message: 'product purchased successfully' });
       } else {
         res.status(403).json({ message: 'User not found' });
       }
      }else {
-      res.status(404).json({ message: 'Course not found' });
+      res.status(404).json({ message: 'product not found' });
     }
   });
 
-  router.get("/course/:courseId" , jwttoken, async (req , res) =>{
-    const courseId = req.params.courseId
-    const course = await Course.findOne({courseId})
+  router.get("/product/:productId" , jwttoken, async (req , res) =>{
+    const productId = req.params.productId
+    const product = await Product.findOne({productId})
     
-    console.log(course);
-    if (course) {
+    console.log(product);
+    if (product) {
       const user = await User.findOne({ username: req.user.username});
       if (user) {
-        res.send(course)
+        res.send(product)
       } else {
         res.status(403).json({ message: 'User not found' });
       }
      }else {
-      res.status(404).json({ message: 'Course not found' });
+      res.status(404).json({ message: 'product not found' });
     }
 
   })
       
-  
-  
-  router.get('/purchasedCourses', jwttoken ,  async (req, res) => {
-    const user = await User.findOne({ username:req.user.username }).populate('purchasedCourses');
+  router.get('/purchasedProduct', jwttoken, async (req, res) => {
+    try {
+        const username = req.user.username;
+
+        // Find the user by username and populate the 'purchasedProduct' field
+        const user = await User.findOne({ username }).populate('purchasedProduct');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Respond with the purchased products
+        res.json({ purchasedProduct: user.purchasedProduct || [] });
+    } catch (error) {
+        console.error('Error fetching purchased products:', error);
+        res.status(500).json({ message: 'An error occurred while fetching purchased products' });
+    }
+});
+
+
+router.post('/productHistory/:productId', jwttoken, async (req, res) => {
+    
+  const product= await Product.findOne({_id: req.params.productId});
+  if (product) {
+    
+    const user = await User.findOne({ username: req.user.username });
     if (user) {
-      res.json({ purchasedCourses: user.purchasedCourses || [] });
+      user.viewHistory.push(product);
+      await user.save();
+
+      res.json({ message: 'product purchased successfully' });
     } else {
       res.status(403).json({ message: 'User not found' });
     }
-  });
-  
-  module.exports =  router
+   }else {
+    res.status(404).json({ message: 'Course not found' });
+  }
+});
+
+
+router.get('/user/recommendations', jwttoken, async (req, res) => {
+  const username = req.user.username;
+  try {
+      const recommendations = await getUserRecommendations(username);
+      res.status(200).json({ recommendations });
+  } catch (error) {
+      res.status(404).json({ error: error.message });
+  }
+});
+
+
+router.get('/user/search/recommendations', jwttoken, async (req, res) => {
+  try {
+    const username = req.user.username;
+    const user = await User.findOne({ username });
+    const viewedProductIds = user.viewHistory;
+    const viewedProducts = await Product.find({ _id: { $in: viewedProductIds } });
+
+    // Extract search parameters from query string
+    const { search } = req.query;
+
+    const brands = viewedProducts.map(product => product.brand).filter(Boolean);
+    const colors = viewedProducts.map(product => product.color).filter(Boolean);
+    const prices = viewedProducts.map(product => product.price).filter(price => price !== undefined);
+    const categories = viewedProducts.map(product => product.category).filter(Boolean);
+    const minPrice = Math.min(...prices) - 10000;
+    const maxPrice = Math.max(...prices) + 10000 ;
+    
+    console.log(brands, colors , minPrice , maxPrice);
+    
+    const query = {
+      $and: [
+        { category: { $in: categories } },
+        {
+          $or: [
+            { brand: { $in: brands } },
+            { color: { $in: colors } }
+          ]
+        },
+        { price: { $gte: minPrice, $lte: maxPrice } },
+        { _id: { $nin: viewedProductIds } } // Exclude viewed products
+      ]
+    };
+
+    if (search) {
+      if (!query.$or) {
+        query.$or = [];
+      }
+      query.$or.push({ $text: { $search: search } });
+    }
+
+    console.log(query);
+
+    const recommendations = await Product.find(query).limit(10);
+
+    res.json(recommendations);
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+module.exports =  router;

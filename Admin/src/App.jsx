@@ -2,15 +2,15 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './component/Login';
 import Landing from "./component/Landing";
-import CreateCourse from './component/CreateCourse';
 import Register from './component/Register';
-import ShowCourses from './component/ShowCourses';
+import ShowProduct from './component/ShowProduct';
 import Appbar from './component/Appbar'
-import  Course from './component/course';
+
 import {RecoilRoot, useSetRecoilState} from 'recoil';
 import { useEffect ,   } from 'react';
 import { userState } from './store/atoms/user';
 import axios from 'axios';
+import CreateProduct from './component/createProduct';
 
 function App() {
     return (
@@ -25,10 +25,9 @@ function App() {
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/Register" element={<RegisterPage />} />
-                <Route path="/course/:courseId" element={<Course /> } />
-                <Route path="/courses" element={<ShowCourses />} />
-                <Route path={"/CreateCourse"} element = {<CreateCourse />} />
-            </Routes>
+                <Route path="/product" element={<ShowProduct />} />
+                <Route path={"/CreateProduct"} element = {<CreateProduct />} />
+            </Routes> 
         </Router>
         </div>
         </RecoilRoot>

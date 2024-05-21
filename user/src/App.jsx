@@ -3,9 +3,9 @@ import Signup from './component/userSignup';
 import Signin from './component/userSignin';
 import Appbar from './component/Appbar';
 import LandingPage from './component/Landingpage';
-import ShowCourse from './component/courses';
-import ShowCourses from './component/coursespage';
-import Content from './component/content';
+import SearchResultPage from './component/searchResults';
+import ShowProduct from './component/product';
+import ShowProducts from './component/cart';
 
 
 
@@ -19,9 +19,10 @@ return (
         <Route path = "/userSignup" element={<Signup/>}></Route>
         <Route path = "/userSignin" element={<Signin/>}></Route>
         <Route path='/' element = {<LandingPage/>} ></Route>
-        <Route path = '/courses' element={ <ShowCourse /> } ></Route>
-        <Route path = '/Boughtcourse' element= {<ShowCourses />} > </Route>
-        <Route path = '/content/courseId' element={<Content/>} ></Route>
+        <Route path = '/product' element={ <ShowProduct /> } ></Route>
+        <Route path = '/cart' element= {<ShowProducts />} > </Route>
+        <Route path="/search-results" element = {<SearchResultPage />}  />
+        
       </Routes>
     </Router>
   </div>
